@@ -13,6 +13,15 @@ const StudentPhotoDropzone = ({
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
 
+  // Revoke the preview object URL when the component unmounts to avoid
+  // a memory leak (the cleanup returned by the preview effect only runs
+  // when selectedFile changes).
+  useEffect(() => () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl);
+    }
+  }, [previewUrl]);
+
   useEffect(() => {
     if (!selectedFile) {
       setPreviewUrl("");

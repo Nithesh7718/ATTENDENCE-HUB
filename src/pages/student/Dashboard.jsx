@@ -16,6 +16,7 @@ const StudentDashboard = () => {
   const [attendance, setAttendance] = useState([]);
   const [monthlyStats, setMonthlyStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const loadStats = async () => {
@@ -28,23 +29,27 @@ const StudentDashboard = () => {
       }
 
       try {
-        const [{ data }, { data: monthlyData }, { data: attendanceData }] =
-          await Promise.all([
-            getMyStats(),
-            getMonthlyStats({
-              month: new Date().toISOString().slice(0, 10)
-            }),
-            supabase
-              .from("attendance")
-              .select("*")
-              .eq("student_id", student.id)
-              .order("date", { ascending: false })
-              .limit(60)
-          ]);
+        const [overallResult, monthlyResult, attendanceResult] = await Promise.all([
+          getMyStats(),
+          getMonthlyStats({ month: new Date().toISOString().slice(0, 10) }),
+          supabase
+            .from("attendance")
+            .select("*")
+            .eq("student_id", student.id)
+            .order("date", { ascending: false })
+            .limit(60)
+        ]);
 
-        setStats(data?.[0] || null);
-        setMonthlyStats(monthlyData?.[0] || null);
-        setAttendance(attendanceData || []);
+        if (overallResult.error) {
+          setError(overallResult.error.message);
+          setStats(null);
+        } else {
+          setError("");
+          setStats(overallResult.data?.[0] || null);
+        }
+
+        setMonthlyStats(monthlyResult.data?.[0] || null);
+        setAttendance(attendanceResult.data || []);
       } finally {
         setLoading(false);
       }
@@ -101,6 +106,11 @@ const StudentDashboard = () => {
           {" "}
           {stats?.absent_days ?? 0}.
         </p>
+        {error ? (
+          <p className="text-sm text-rose-200 mt-2">
+            Could not load attendance stats: {error}
+          </p>
+        ) : null}
         <div className="mt-4 grid gap-2 text-sm text-slate-300">
           <p>
             This month: {monthlyStats?.present_days ?? 0} present /

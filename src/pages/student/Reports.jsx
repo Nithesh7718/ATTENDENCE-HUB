@@ -17,25 +17,35 @@ const StudentReports = () => {
   const [current, setCurrent] = useState(null);
   const [previous, setPrevious] = useState(null);
   const [exporting, setExporting] = useState(false);
+  const [loadError, setLoadError] = useState("");
+  const [exportError, setExportError] = useState("");
 
   useEffect(() => {
     const load = async () => {
       if (!student?.id) {
         setCurrent(null);
         setPrevious(null);
+        setLoadError("");
         return;
       }
 
       const currentDate = monthValueToDate(selectedMonth);
       const previousDate = addMonths(currentDate, -1);
 
-      const [{ data: currentData }, { data: previousData }] = await Promise.all([
+      const [currentResult, previousResult] = await Promise.all([
         getMonthlyStats({ month: format(currentDate, "yyyy-MM-dd") }),
         getMonthlyStats({ month: format(previousDate, "yyyy-MM-dd") })
       ]);
 
-      setCurrent(currentData?.[0] || null);
-      setPrevious(previousData?.[0] || null);
+      if (currentResult.error) {
+        setLoadError(currentResult.error.message);
+        setCurrent(null);
+      } else {
+        setLoadError("");
+        setCurrent(currentResult.data?.[0] || null);
+      }
+
+      setPrevious(previousResult.data?.[0] || null);
     };
 
     load();
@@ -50,6 +60,7 @@ const StudentReports = () => {
   const exportMonth = async () => {
     if (!student?.id) return;
     setExporting(true);
+    setExportError("");
     const currentDate = monthValueToDate(selectedMonth);
     const start = format(startOfMonth(currentDate), "yyyy-MM-dd");
     const end = format(endOfMonth(currentDate), "yyyy-MM-dd");
@@ -62,19 +73,27 @@ const StudentReports = () => {
       .lte("date", end)
       .order("date", { ascending: false });
 
-    if (!error && data?.length) {
-      downloadCSV(
-        `my-attendance-${selectedMonth}.csv`,
-        data.map((row) => ({
-          date: row.date,
-          status: row.status,
-          marked_by: row.marked_by || "Admin",
-          marked_at: row.marked_at || ""
-        }))
-      );
+    setExporting(false);
+
+    if (error) {
+      setExportError(error.message);
+      return;
     }
 
-    setExporting(false);
+    if (!data?.length) {
+      setExportError("No attendance records to export for this month.");
+      return;
+    }
+
+    downloadCSV(
+      `my-attendance-${selectedMonth}.csv`,
+      data.map((row) => ({
+        date: row.date,
+        status: row.status,
+        marked_by: row.marked_by || "Admin",
+        marked_at: row.marked_at || ""
+      }))
+    );
   };
 
   return (
@@ -84,6 +103,20 @@ const StudentReports = () => {
         subtitle="Monthly attendance breakdown and export."
         actions={<Button onClick={exportMonth}>{exporting ? "Exporting..." : "Export CSV"}</Button>}
       />
+
+      {loadError ? (
+        <Card>
+          <p className="text-sm text-rose-200">
+            Could not load monthly stats: {loadError}
+          </p>
+        </Card>
+      ) : null}
+
+      {exportError ? (
+        <Card>
+          <p className="text-sm text-rose-200">Export failed: {exportError}</p>
+        </Card>
+      ) : null}
 
       <Card>
         <label className="text-sm text-slate-300">Select month</label>

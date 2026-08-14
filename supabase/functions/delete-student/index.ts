@@ -22,16 +22,30 @@ serve(async (req) => {
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const adminEmail = (Deno.env.get("ADMIN_EMAIL") ?? "attendencehub@gmail.com").toLowerCase();
 
+  if (!supabaseUrl || !serviceRoleKey || !anonKey) {
+    return new Response("Missing required Supabase env configuration", {
+      status: 500,
+      headers: corsHeaders
+    });
+  }
+
   const authHeader = req.headers.get("Authorization") || "";
   const authClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } }
   });
-  const { data: authData } = await authClient.auth.getUser();
-  if (!authData?.user || authData.user.email?.toLowerCase() !== adminEmail) {
+  const { data: authData, error: authError } = await authClient.auth.getUser();
+  if (authError || !authData?.user || authData.user.email?.toLowerCase() !== adminEmail) {
     return new Response("Unauthorized", { status: 403, headers: corsHeaders });
   }
 
-  const { studentId, userId } = await req.json();
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch (_parseError) {
+    return new Response("Invalid JSON body", { status: 400, headers: corsHeaders });
+  }
+  const studentId = body?.studentId;
+  const userId = body?.userId;
   if (!studentId && !userId) {
     return new Response("studentId or userId is required", {
       status: 400,

@@ -5,7 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import BrandLogo from "../components/BrandLogo";
 
 const Login = () => {
-  const { signInWithGoogle, signInWithPassword } = useAuth();
+  const { signInWithGoogle, signInWithPassword, error: authError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
@@ -108,6 +108,7 @@ const Login = () => {
             {googleSubmitting ? "Redirecting..." : "Continue with Google"}
           </button>
 
+          {authError ? <p className="text-sm text-rose-200">{authError}</p> : null}
           {error ? <p className="text-sm text-rose-200">{error}</p> : null}
 
           <div className="flex items-center justify-between text-xs">

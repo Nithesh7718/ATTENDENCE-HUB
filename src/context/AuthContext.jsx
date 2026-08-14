@@ -1,5 +1,10 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { siteUrl, supabase } from "../lib/supabaseClient";
+import {
+  isSupabaseConfigured,
+  supabaseConfigErrorMessage,
+  siteUrl,
+  supabase
+} from "../lib/supabaseClient";
 import { ADMIN_EMAIL, ROLE_HOME } from "../lib/constants";
 
 const AuthContext = createContext(null);
@@ -27,6 +32,7 @@ export const AuthProvider = ({ children }) => {
   const [role, setRole] = useState(null);
   const [student, setStudent] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const getStudentByUserId = async (userId) =>
     supabase.from("students").select("*").eq("user_id", userId).maybeSingle();
@@ -87,6 +93,14 @@ export const AuthProvider = ({ children }) => {
     let mounted = true;
 
     const init = async () => {
+      if (!isSupabaseConfigured()) {
+        if (mounted) {
+          setLoading(false);
+          setRole("unknown");
+          setError(supabaseConfigErrorMessage);
+        }
+        return;
+      }
       try {
         const { data, error } = await withTimeout(
           supabase.auth.getSession(),
@@ -175,13 +189,14 @@ export const AuthProvider = ({ children }) => {
       role,
       student,
       loading,
+      error,
       signInWithGoogle,
       signInWithPassword,
       signOut,
       refreshProfile,
       roleHome: ROLE_HOME[role] || "/login"
     }),
-    [session, user, role, student, loading]
+    [session, user, role, student, loading, error]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

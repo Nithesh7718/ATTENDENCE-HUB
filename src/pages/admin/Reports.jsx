@@ -10,11 +10,18 @@ import StudentAvatar from "../../components/ui/StudentAvatar";
 const AdminReports = () => {
   const [stats, setStats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
     const loadStats = async () => {
-      const { data } = await listStats();
-      setStats(data || []);
+      const { data, error } = await listStats();
+      if (error) {
+        setLoadError(error.message);
+        setStats([]);
+      } else {
+        setLoadError("");
+        setStats(data || []);
+      }
       setLoading(false);
     };
     loadStats();
@@ -82,6 +89,8 @@ const AdminReports = () => {
         <div className="mt-4 overflow-x-auto">
           {loading ? (
             <p className="text-sm text-slate-300">Loading report data...</p>
+          ) : loadError ? (
+            <p className="text-sm text-rose-200">Could not load report data: {loadError}</p>
           ) : (
             <table className="w-full text-sm">
               <thead>

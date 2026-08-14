@@ -27,15 +27,29 @@ const toDateKey = (value) => {
   return `${year}-${month}-${day}`;
 };
 
+const parseMonthKey = (monthValue) => {
+  // Accepts "yyyy-MM", "yyyy-MM-dd", or "yyyy-MM-ddTHH:mm:ss..." strings.
+  // Parses as local time so year/month never drift across UTC midnight boundaries.
+  const cleaned = monthValue ? monthValue.trim().slice(0, 10) : "";
+  const parts = cleaned.split("-").map((segment) => Number(segment));
+  if (parts.length < 2 || parts.some((segment) => Number.isNaN(segment))) {
+    return null;
+  }
+  const [year, month] = parts;
+  if (!Number.isFinite(year) || month < 1 || month > 12) {
+    return null;
+  }
+  return { year, month };
+};
+
 const getMonthRange = (monthValue) => {
-  const parsed = monthValue ? new Date(monthValue) : new Date();
-  const baseDate = Number.isNaN(parsed.getTime()) ? new Date() : parsed;
-  const start = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-  const endExclusive = new Date(
-    baseDate.getFullYear(),
-    baseDate.getMonth() + 1,
-    1
-  );
+  const parsed = parseMonthKey(monthValue);
+  const baseDate = parsed ? { year: parsed.year, month: parsed.month } : null;
+  const now = new Date();
+  const year = baseDate?.year ?? now.getFullYear();
+  const month = baseDate?.month ?? now.getMonth() + 1;
+  const start = new Date(year, month - 1, 1);
+  const endExclusive = new Date(year, month, 1);
   return {
     start: toDateKey(start),
     endExclusive: toDateKey(endExclusive)

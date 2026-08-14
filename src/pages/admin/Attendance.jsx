@@ -18,22 +18,39 @@ const AdminAttendance = () => {
   const [students, setStudents] = useState([]);
   const [statusMap, setStatusMap] = useState({});
   const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [loadError, setLoadError] = useState("");
 
-  const loadData = async () => {
-    const { data: studentData } = await listStudents();
-    const { data: attendanceData } = await listAttendanceForDate(date);
+  const loadData = async (selectedDate) => {
+    setLoading(true);
+    setLoadError("");
+    try {
+      const [{ data: studentData, error: studentError }, { data: attendanceData }] =
+        await Promise.all([
+          listStudents(),
+          listAttendanceForDate(selectedDate)
+        ]);
+      if (studentError) {
+        setLoadError(studentError.message);
+        setStudents([]);
+        setStatusMap({});
+        return;
+      }
 
-    const mapped = {};
-    (attendanceData || []).forEach((record) => {
-      mapped[record.student_id] = record.status;
-    });
+      const mapped = {};
+      (attendanceData || []).forEach((record) => {
+        mapped[record.student_id] = record.status;
+      });
 
-    setStudents(studentData || []);
-    setStatusMap(mapped);
+      setStudents(studentData || []);
+      setStatusMap(mapped);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
-    loadData();
+    loadData(date);
   }, [date]);
 
   const updateStatus = (studentId, status) => {
@@ -49,7 +66,9 @@ const AdminAttendance = () => {
   };
 
   const handleSave = async () => {
+    if (loading || !students.length) return;
     setMessage("");
+    setLoadError("");
     const records = students.map((student) => ({
       student_id: student.id,
       date,
@@ -91,6 +110,8 @@ const AdminAttendance = () => {
             onChange={(event) => setDate(event.target.value)}
           />
           {message ? <p className="text-sm text-emerald-200">{message}</p> : null}
+          {loadError ? <p className="text-sm text-rose-200">{loadError}</p> : null}
+          {loading ? <p className="text-sm text-slate-400">Loading students...</p> : null}
         </div>
 
         <div className="mt-6 overflow-x-auto">
@@ -104,7 +125,7 @@ const AdminAttendance = () => {
               </tr>
             </thead>
             <tbody>
-              {students.map((student) => (
+              {!loading && students.map((student) => (
                 <tr key={student.id} className="border-t border-white/5">
                   <td className="py-4">
                     <div className="flex items-center gap-3">
