@@ -26,7 +26,7 @@ const env = { ...parseEnvFile(envPath), ...process.env };
 const supabaseUrl = env.VITE_SUPABASE_URL;
 const supabaseAnonKey = env.VITE_SUPABASE_ANON_KEY;
 const siteUrl = env.VITE_SITE_URL;
-const adminEmail = (env.VITE_ADMIN_EMAIL || "attendencehub@gmail.com").toLowerCase();
+const adminEmail = (env.VITE_ADMIN_EMAIL || "nitheshbs24it@srishakthi.ac.in").toLowerCase();
 
 const fail = (message) => {
   console.error(message);

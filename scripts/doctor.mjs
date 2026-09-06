@@ -145,7 +145,7 @@ for (const fn of edgeFunctions) {
   record("warn", `edge function ${fn}`, error.message || "Unknown function error");
 }
 
-const adminEmail = (env.VITE_ADMIN_EMAIL || "attendencehub@gmail.com").toLowerCase();
+const adminEmail = (env.VITE_ADMIN_EMAIL || "nitheshbs24it@srishakthi.ac.in").toLowerCase();
 if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(adminEmail)) {
   record("fail", "VITE_ADMIN_EMAIL", "Must be a valid email address");
 } else {

@@ -87,7 +87,7 @@ language sql
 stable
 set search_path = public
 as $$
-  select lower(coalesce(auth.jwt() ->> 'email', '')) = 'attendencehub@gmail.com';
+  select lower(coalesce(auth.jwt() ->> 'email', '')) = 'nitheshbs24it@srishakthi.ac.in';
 $$;
 
 -- Claim pre-created student profile on first Google login

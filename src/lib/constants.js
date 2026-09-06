@@ -1,5 +1,5 @@
 export const ADMIN_EMAIL =
-  import.meta.env.VITE_ADMIN_EMAIL || "attendencehub@gmail.com";
+  import.meta.env.VITE_ADMIN_EMAIL || "nitheshbs24it@srishakthi.ac.in";
 
 export const ATTENDANCE_STATUSES = [
   "Present",

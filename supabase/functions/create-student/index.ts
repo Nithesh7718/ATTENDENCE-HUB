@@ -53,7 +53,7 @@ serve(async (req) => {
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const siteUrl = (Deno.env.get("SITE_URL") ?? "").trim();
-  const adminEmail = (Deno.env.get("ADMIN_EMAIL") ?? "attendencehub@gmail.com").toLowerCase();
+  const adminEmail = (Deno.env.get("ADMIN_EMAIL") ?? "nitheshbs24it@srishakthi.ac.in").toLowerCase();
 
   if (!supabaseUrl || !serviceRoleKey || !anonKey) {
     return textResponse("Missing required Supabase env configuration", 500);
