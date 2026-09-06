@@ -82,6 +82,30 @@ const AdminAttendance = () => {
       setMessage(error.message);
       return;
     }
+
+    // Submit to Google Sheet Webhook alongside Supabase
+    const googleScriptUrl = "https://script.google.com/a/macros/srishakthi.ac.in/s/AKfycbxNbH_d-4JlEsqGDQLOW_9B4t1WbP2_w0KRuc-XzS1p8bAezc_N6OLYoBvqHQX9c7SR/exec";
+    await Promise.all(
+      records.map((record) => {
+        const student = students.find((item) => item.id === record.student_id);
+
+        return fetch(googleScriptUrl, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            targetSheet: "Daily_September",
+            date,
+            register_number: student.register_number,
+            student_name: student.name,
+            status: record.status,
+            marked_by: user?.email || "admin"
+          })
+        });
+      })
+    );
     setMessage("Attendance saved.");
   };
 
